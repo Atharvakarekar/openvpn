@@ -965,29 +965,36 @@ wide_cmd_line(const struct argv *a, struct gc_arena *gc)
         }
     }
 
-    work = gc_malloc(maxlen + 1, false, gc);
-    check_malloc_return(work);
-    buf = alloc_buf_gc(nchars, gc);
+work = gc_malloc(maxlen + 1, false, gc);
+check_malloc_return(work);
+buf = alloc_buf_gc(nchars, gc);
 
-    for (i = 0; i < a->argc; ++i)
-    {
-        const char *arg = a->argv[i];
-        strcpy(work, arg);
-        string_mod(work, CC_PRINT, CC_DOUBLE_QUOTE|CC_CRLF, '_');
-        if (i)
-        {
-            buf_printf(&buf, " ");
-        }
-        if (string_class(work, CC_ANY, CC_SPACE))
-        {
-            buf_printf(&buf, "%s", work);
-        }
-        else
-        {
-            buf_printf(&buf, "\"%s\"", work);
-        }
+for (i = 0; i < a->argc; ++i)
+{
+    const char *arg = a->argv[i];
+    size_t arg_len = strlen(arg);
+
+    if (arg_len > maxlen) {
+        // Handle arguments longer than maxlen + 1 here, for example:
+        printf("Argument %d is too long: %zu characters\n", i, arg_len);
+        continue; // Skip this argument and proceed with the next one
     }
 
+    strcpy(work, arg);
+    string_mod(work, CC_PRINT, CC_DOUBLE_QUOTE|CC_CRLF, '_');
+    if (i)
+    {
+        buf_printf(&buf, " ");
+    }
+    if (string_class(work, CC_ANY, CC_SPACE))
+    {
+        buf_printf(&buf, "%s", work);
+    }
+    else
+    {
+        buf_printf(&buf, "\"%s\"", work);
+    }
+}
     return wide_string(BSTR(&buf), gc);
 }
 
